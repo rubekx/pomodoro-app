@@ -45,7 +45,7 @@ class _TomatoPainter extends CustomPainter {
     
     canvas.drawCircle(
       Offset(center.dx + radius * 0.3, center.dy + radius * 0.3),
-      radius * 0.7,
+      radius * 0.75,
       shadowPaint,
     );
     // Desenha o tomate (corpo principal)
@@ -109,7 +109,7 @@ class _TomatoPainter extends CustomPainter {
     
     canvas.drawCircle(
       Offset(center.dx - radius * 0.3, center.dy - radius * 0.3),
-      radius * 0.3,
+      radius * 0.4,
       highlightPaint,
     );
   }

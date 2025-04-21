@@ -34,7 +34,7 @@ class _PomodoroAppleTimerState extends State<PomodoroAppleTimer> {
   int longBreakMinutes = 15;
   int targetCycles = 4;
   int cyclesBeforeLongBreak = 4;
-  
+
   Duration workDuration = Duration(minutes: 25);
   Duration breakDuration = Duration(minutes: 5);
   Duration longBreakDuration = Duration(minutes: 15);
@@ -43,7 +43,7 @@ class _PomodoroAppleTimerState extends State<PomodoroAppleTimer> {
   bool isRunning = false;
   int cycle = 1;
   String currentMode = "work"; // "work", "break", "longBreak"
-  
+
   // Alarm related properties
   bool alarmEnabled = true;
   String alarmType = "alarm"; // "alarm", "notification", "ringtone"
@@ -65,13 +65,14 @@ class _PomodoroAppleTimerState extends State<PomodoroAppleTimer> {
           setState(() => remaining -= Duration(seconds: 1));
         } else {
           timer?.cancel();
-          
+
           // Tocar o alarme quando o tempo acabar
           if (alarmEnabled) {
             _playSystemSound();
           }
 
           setState(() {
+            String previousMode = currentMode;
             if (currentMode == "work") {
               // Check if we need a long break
               if (cycle % cyclesBeforeLongBreak == 0) {
@@ -84,10 +85,12 @@ class _PomodoroAppleTimerState extends State<PomodoroAppleTimer> {
             } else {
               // After any break, go back to work
               currentMode = "work";
-              if (currentMode == "longBreak" || currentMode == "break") {
+              remaining = workDuration;
+
+              // Incrementa o ciclo após completar uma pausa
+              if (previousMode == "break" || previousMode == "longBreak") {
                 cycle++;
               }
-              remaining = workDuration;
             }
             isRunning = false;
           });
@@ -126,7 +129,7 @@ class _PomodoroAppleTimerState extends State<PomodoroAppleTimer> {
           );
           break;
       }
-      
+
       // Parar o som após 3 segundos
       Future.delayed(Duration(seconds: 3), () {
         FlutterRingtonePlayer().stop();
@@ -153,10 +156,18 @@ class _PomodoroAppleTimerState extends State<PomodoroAppleTimer> {
   void _openSettingsDialog() {
     // Create controllers for the text fields
     final workController = TextEditingController(text: workMinutes.toString());
-    final breakController = TextEditingController(text: breakMinutes.toString());
-    final longBreakController = TextEditingController(text: longBreakMinutes.toString());
-    final cycleController = TextEditingController(text: targetCycles.toString());
-    final longBreakCycleController = TextEditingController(text: cyclesBeforeLongBreak.toString());
+    final breakController = TextEditingController(
+      text: breakMinutes.toString(),
+    );
+    final longBreakController = TextEditingController(
+      text: longBreakMinutes.toString(),
+    );
+    final cycleController = TextEditingController(
+      text: targetCycles.toString(),
+    );
+    final longBreakCycleController = TextEditingController(
+      text: cyclesBeforeLongBreak.toString(),
+    );
 
     // Variáveis locais para o diálogo
     bool localAlarmEnabled = alarmEnabled;
@@ -164,137 +175,170 @@ class _PomodoroAppleTimerState extends State<PomodoroAppleTimer> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setStateDialog) {
-          return AlertDialog(
-            title: Text('Configurações do Pomodoro'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: workController,
-                    decoration: InputDecoration(labelText: 'Tempo de Trabalho (minutos)'),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      builder:
+          (context) => StatefulBuilder(
+            builder: (context, setStateDialog) {
+              return AlertDialog(
+                title: Text('Configurações do Pomodoro'),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: workController,
+                        decoration: InputDecoration(
+                          labelText: 'Tempo de Trabalho (minutos)',
+                        ),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                      ),
+                      TextField(
+                        controller: breakController,
+                        decoration: InputDecoration(
+                          labelText: 'Tempo de Pausa Curta (minutos)',
+                        ),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                      ),
+                      TextField(
+                        controller: longBreakController,
+                        decoration: InputDecoration(
+                          labelText: 'Tempo de Pausa Longa (minutos)',
+                        ),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                      ),
+                      TextField(
+                        controller: longBreakCycleController,
+                        decoration: InputDecoration(
+                          labelText: 'Ciclos antes da Pausa Longa',
+                        ),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                      ),
+                      TextField(
+                        controller: cycleController,
+                        decoration: InputDecoration(
+                          labelText: 'Total de Ciclos Alvo',
+                        ),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                      ),
+                      SwitchListTile(
+                        title: Text('Som ao finalizar'),
+                        value: localAlarmEnabled,
+                        onChanged: (value) {
+                          setStateDialog(() {
+                            localAlarmEnabled = value;
+                          });
+                        },
+                      ),
+                      if (localAlarmEnabled)
+                        Column(
+                          children: [
+                            ListTile(
+                              title: Text('Tipo de som'),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 0,
+                              ),
+                            ),
+                            RadioListTile<String>(
+                              title: Text('Alarme'),
+                              value: 'alarm',
+                              groupValue: localAlarmType,
+                              onChanged: (value) {
+                                setStateDialog(() {
+                                  localAlarmType = value!;
+                                });
+                              },
+                            ),
+                            RadioListTile<String>(
+                              title: Text('Notificação'),
+                              value: 'notification',
+                              groupValue: localAlarmType,
+                              onChanged: (value) {
+                                setStateDialog(() {
+                                  localAlarmType = value!;
+                                });
+                              },
+                            ),
+                            RadioListTile<String>(
+                              title: Text('Toque'),
+                              value: 'ringtone',
+                              groupValue: localAlarmType,
+                              onChanged: (value) {
+                                setStateDialog(() {
+                                  localAlarmType = value!;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                    ],
                   ),
-                  TextField(
-                    controller: breakController,
-                    decoration: InputDecoration(labelText: 'Tempo de Pausa Curta (minutos)'),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text('Cancelar'),
                   ),
-                  TextField(
-                    controller: longBreakController,
-                    decoration: InputDecoration(labelText: 'Tempo de Pausa Longa (minutos)'),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  ),
-                  TextField(
-                    controller: longBreakCycleController,
-                    decoration: InputDecoration(labelText: 'Ciclos antes da Pausa Longa'),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  ),
-                  TextField(
-                    controller: cycleController,
-                    decoration: InputDecoration(labelText: 'Total de Ciclos Alvo'),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  ),
-                  SwitchListTile(
-                    title: Text('Som ao finalizar'),
-                    value: localAlarmEnabled,
-                    onChanged: (value) {
-                      setStateDialog(() {
-                        localAlarmEnabled = value;
+                  TextButton(
+                    onPressed: () {
+                      // Parse the input values
+                      final newWorkMin =
+                          int.tryParse(workController.text) ?? workMinutes;
+                      final newBreakMin =
+                          int.tryParse(breakController.text) ?? breakMinutes;
+                      final newLongBreakMin =
+                          int.tryParse(longBreakController.text) ??
+                          longBreakMinutes;
+                      final newTargetCycles =
+                          int.tryParse(cycleController.text) ?? targetCycles;
+                      final newLongBreakCycles =
+                          int.tryParse(longBreakCycleController.text) ??
+                          cyclesBeforeLongBreak;
+
+                      // Update the settings
+                      setState(() {
+                        workMinutes = newWorkMin > 0 ? newWorkMin : 1;
+                        breakMinutes = newBreakMin > 0 ? newBreakMin : 1;
+                        longBreakMinutes =
+                            newLongBreakMin > 0 ? newLongBreakMin : 1;
+                        targetCycles =
+                            newTargetCycles > 0 ? newTargetCycles : 1;
+                        cyclesBeforeLongBreak =
+                            newLongBreakCycles > 0 ? newLongBreakCycles : 1;
+
+                        workDuration = Duration(minutes: workMinutes);
+                        breakDuration = Duration(minutes: breakMinutes);
+                        longBreakDuration = Duration(minutes: longBreakMinutes);
+
+                        // Atualizar configurações de som
+                        alarmEnabled = localAlarmEnabled;
+                        alarmType = localAlarmType;
+
+                        // Reset the timer
+                        reset();
                       });
+
+                      Navigator.pop(context);
                     },
+                    child: Text('Salvar'),
                   ),
-                  if (localAlarmEnabled)
-                    Column(
-                      children: [
-                        ListTile(
-                          title: Text('Tipo de som'),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 0),
-                        ),
-                        RadioListTile<String>(
-                          title: Text('Alarme'),
-                          value: 'alarm',
-                          groupValue: localAlarmType,
-                          onChanged: (value) {
-                            setStateDialog(() {
-                              localAlarmType = value!;
-                            });
-                          },
-                        ),
-                        RadioListTile<String>(
-                          title: Text('Notificação'),
-                          value: 'notification',
-                          groupValue: localAlarmType,
-                          onChanged: (value) {
-                            setStateDialog(() {
-                              localAlarmType = value!;
-                            });
-                          },
-                        ),
-                        RadioListTile<String>(
-                          title: Text('Toque'),
-                          value: 'ringtone',
-                          groupValue: localAlarmType,
-                          onChanged: (value) {
-                            setStateDialog(() {
-                              localAlarmType = value!;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
                 ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Cancelar'),
-              ),
-              TextButton(
-                onPressed: () {
-                  // Parse the input values
-                  final newWorkMin = int.tryParse(workController.text) ?? workMinutes;
-                  final newBreakMin = int.tryParse(breakController.text) ?? breakMinutes;
-                  final newLongBreakMin = int.tryParse(longBreakController.text) ?? longBreakMinutes;
-                  final newTargetCycles = int.tryParse(cycleController.text) ?? targetCycles;
-                  final newLongBreakCycles = int.tryParse(longBreakCycleController.text) ?? cyclesBeforeLongBreak;
-                  
-                  // Update the settings
-                  setState(() {
-                    workMinutes = newWorkMin > 0 ? newWorkMin : 1;
-                    breakMinutes = newBreakMin > 0 ? newBreakMin : 1;
-                    longBreakMinutes = newLongBreakMin > 0 ? newLongBreakMin : 1;
-                    targetCycles = newTargetCycles > 0 ? newTargetCycles : 1;
-                    cyclesBeforeLongBreak = newLongBreakCycles > 0 ? newLongBreakCycles : 1;
-                    
-                    workDuration = Duration(minutes: workMinutes);
-                    breakDuration = Duration(minutes: breakMinutes);
-                    longBreakDuration = Duration(minutes: longBreakMinutes);
-                    
-                    // Atualizar configurações de som
-                    alarmEnabled = localAlarmEnabled;
-                    alarmType = localAlarmType;
-                    
-                    // Reset the timer
-                    reset();
-                  });
-                  
-                  Navigator.pop(context);
-                },
-                child: Text('Salvar'),
-              ),
-            ],
-          );
-        },
-      ),
+              );
+            },
+          ),
     );
   }
 
@@ -339,7 +383,7 @@ class _PomodoroAppleTimerState extends State<PomodoroAppleTimer> {
 
   IconData getAlarmIcon() {
     if (!alarmEnabled) return Icons.volume_off;
-    
+
     switch (alarmType) {
       case "alarm":
         return Icons.access_alarm;
@@ -385,9 +429,11 @@ class _PomodoroAppleTimerState extends State<PomodoroAppleTimer> {
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(alarmEnabled 
-                    ? 'Som ativado (${getAlarmTypeIcon()})' 
-                    : 'Som desativado'),
+                  content: Text(
+                    alarmEnabled
+                        ? 'Som ativado (${getAlarmTypeIcon()})'
+                        : 'Som desativado',
+                  ),
                   duration: Duration(seconds: 1),
                 ),
               );
@@ -438,7 +484,10 @@ class _PomodoroAppleTimerState extends State<PomodoroAppleTimer> {
                     ElevatedButton(
                       onPressed: startPause,
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
                       ),
                       child: Text(isRunning ? 'Pausar' : 'Iniciar'),
                     ),
@@ -446,7 +495,10 @@ class _PomodoroAppleTimerState extends State<PomodoroAppleTimer> {
                     ElevatedButton(
                       onPressed: reset,
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
                       ),
                       child: const Text('Resetar'),
                     ),
@@ -458,17 +510,11 @@ class _PomodoroAppleTimerState extends State<PomodoroAppleTimer> {
                     TextButton.icon(
                       onPressed: _openSettingsDialog,
                       icon: Icon(Icons.edit, color: Colors.white),
-                      label: Text('Editar Configurações', 
+                      label: Text(
+                        'Editar Configurações',
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
-                    // TextButton.icon(
-                    //   onPressed: _testarSom,
-                    //   icon: Icon(Icons.music_note, color: Colors.white),
-                    //   label: Text('Testar Som', 
-                    //     style: TextStyle(color: Colors.white),
-                    //   ),
-                    // ),
                   ],
                 ),
               ],

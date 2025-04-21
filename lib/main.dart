@@ -66,37 +66,52 @@ class _PomodoroAppleTimerState extends State<PomodoroAppleTimer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Pomodoro 🍎 - Foco')),
-      body: CustomPaint(
-        painter: PomodoroPainter(),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                formatTime(remaining),
-                style: TextStyle(fontSize: 72, color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 10),
-              Text('Ciclo: $cycle', style: TextStyle(color: Colors.white)),
-              SizedBox(height: 40),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: startPause,
-                    child: Text(isRunning ? 'Pausar' : 'Iniciar'),
-                  ),
-                  SizedBox(width: 20),
-                  ElevatedButton(
-                    onPressed: reset,
-                    child: Text('Resetar'),
-                  ),
-                ],
-              ),
-            ],
+      appBar: AppBar(title: Text('Pomodoro')),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: PomodoroPainter(
+              size: MediaQuery.of(context).size.width,
+              tomatoColor: const Color(0xFFE53935),
+              leafColor: const Color(0xFF4CAF50),
+            ),
           ),
-        ),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  formatTime(remaining),
+                  style: const TextStyle(
+                    fontSize: 72,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Ciclo: $cycle',
+                  style: const TextStyle(color: Colors.white, fontSize: 30),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: startPause,
+                      child: Text(isRunning ? 'Pausar' : 'Iniciar'),
+                    ),
+                    const SizedBox(width: 20),
+                    ElevatedButton(
+                      onPressed: reset,
+                      child: const Text('Resetar'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

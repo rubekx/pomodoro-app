@@ -1,36 +1,119 @@
 import 'package:flutter/material.dart';
 
-class PomodoroPainter extends CustomPainter {
+class PomodoroPainter extends StatelessWidget {
+  final double size;
+  final Color tomatoColor;
+  final Color leafColor;
+
+  const PomodoroPainter({
+    super.key,
+    this.size = 200,
+    this.tomatoColor = const Color(0xFFE53935),
+    this.leafColor = const Color(0xFF4CAF50),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size(size, size),
+      painter: _TomatoPainter(
+        tomatoColor: tomatoColor,
+        leafColor: leafColor,
+      ),
+    );
+  }
+}
+
+class _TomatoPainter extends CustomPainter {
+  final Color tomatoColor;
+  final Color leafColor;
+
+  _TomatoPainter({
+    required this.tomatoColor,
+    required this.leafColor,
+  });
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final paint = Paint()..color = Colors.red;
-
-    // Corpo da maçã
-    final appleBody = Path()
-      ..moveTo(center.dx - 80, center.dy)
-      ..cubicTo(center.dx - 220, center.dy - 200, center.dx + 220, center.dy - 200, center.dx + 80, center.dy)
-      ..cubicTo(center.dx + 100, center.dy + 120, center.dx - 100, center.dy + 120, center.dx - 80, center.dy)
-      ..close();
-
-    canvas.drawPath(appleBody, paint);
-
-    // Folha
-    final leafPaint = Paint()..color = Colors.green;
-    final leafPath = Path()
-      ..moveTo(center.dx, center.dy - 180)
-      ..quadraticBezierTo(center.dx + 90, center.dy - 200, center.dx + 130, center.dy - 170)
-      ..quadraticBezierTo(center.dx + 70, center.dy - 120, center.dx, center.dy - 170)
-      ..close();
-    canvas.drawPath(leafPath, leafPaint);
-
-    // Cabo
+    final radius = size.width * 0.4;
+        
+    // Adiciona detalhes de sombra no tomate para dar mais volume
+    final shadowPaint = Paint()
+      ..color = Colors.black.withOpacity(0.1)
+      ..style = PaintingStyle.fill;
+    
+    canvas.drawCircle(
+      Offset(center.dx + radius * 0.3, center.dy + radius * 0.3),
+      radius * 0.7,
+      shadowPaint,
+    );
+    // Desenha o tomate (corpo principal)
+    final tomatoPaint = Paint()
+      ..color = tomatoColor
+      ..style = PaintingStyle.fill;
+    
+    canvas.drawCircle(center, radius, tomatoPaint);
+    
+    // Desenha o caule verde no topo
     final stemPaint = Paint()
-      ..color = Colors.brown
-      ..strokeWidth = 10;
-    canvas.drawLine(center.translate(0, -120), center.translate(0, -190), stemPaint);
+      ..color = Color(0xFF795548)
+      ..style = PaintingStyle.fill;
+    
+    final stemRect = Rect.fromCenter(
+      center: Offset(center.dx, center.dy - radius * 0.9),
+      width: size.width * 0.05,
+      height: size.height * 0.1,
+    );
+    
+    canvas.drawRect(stemRect, stemPaint);
+    
+    // Desenha as folhas
+    final leafPaint = Paint()
+      ..color = leafColor
+      ..style = PaintingStyle.fill;
+    
+    // Folha esquerda
+    final leftLeafPath = Path();
+    leftLeafPath.moveTo(center.dx - size.width * 0.05, center.dy - radius * 0.95);
+    leftLeafPath.quadraticBezierTo(
+      center.dx - size.width * 0.15, center.dy - radius * 1.2,
+      center.dx - size.width * 0.25, center.dy - radius * 0.95,
+    );
+    leftLeafPath.quadraticBezierTo(
+      center.dx - size.width * 0.15, center.dy - radius * 0.75,
+      center.dx - size.width * 0.05, center.dy - radius * 0.85,
+    );
+    leftLeafPath.close();
+    canvas.drawPath(leftLeafPath, leafPaint);
+    
+    // Folha direita
+    final rightLeafPath = Path();
+    rightLeafPath.moveTo(center.dx + size.width * 0.05, center.dy - radius * 0.95);
+    rightLeafPath.quadraticBezierTo(
+      center.dx + size.width * 0.15, center.dy - radius * 1.2,
+      center.dx + size.width * 0.25, center.dy - radius * 0.95,
+    );
+    rightLeafPath.quadraticBezierTo(
+      center.dx + size.width * 0.15, center.dy - radius * 0.75,
+      center.dx + size.width * 0.05, center.dy - radius * 0.85,
+    );
+    rightLeafPath.close();
+    canvas.drawPath(rightLeafPath, leafPaint);
+
+    
+    // Adiciona brilho no tomate
+    final highlightPaint = Paint()
+      ..color = Colors.white.withOpacity(0.2)
+      ..style = PaintingStyle.fill;
+    
+    canvas.drawCircle(
+      Offset(center.dx - radius * 0.3, center.dy - radius * 0.3),
+      radius * 0.3,
+      highlightPaint,
+    );
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

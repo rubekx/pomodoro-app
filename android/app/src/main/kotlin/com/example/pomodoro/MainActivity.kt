@@ -1,4 +1,4 @@
-package com.example.pomodoro
+package com.example.tomate
 
 import io.flutter.embedding.android.FlutterActivity
 

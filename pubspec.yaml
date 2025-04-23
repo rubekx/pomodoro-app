@@ -1,4 +1,4 @@
-name: pomodoro
+name: tomate
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -43,8 +43,8 @@ dev_dependencies:
     sdk: flutter
 
   # flutter_icons:
-  #   image_path_android: "assets/pomodoro.png"
-  #   image_path_ios: "assets/pomodoro-ios.png"
+  #   image_path_android: "assets/tomate.png"
+  #   image_path_ios: "assets/tomate-ios.png"
   #   android: true
   #   ios: true
 

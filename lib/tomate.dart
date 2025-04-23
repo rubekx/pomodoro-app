@@ -350,8 +350,10 @@ class _TomateAppleTimerState extends State<TomateAppleTimer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5CBA7),
       appBar: AppBar(
-        title: Text('Tomate'),
+        backgroundColor: const Color(0xFFF5CBA7),
+        // title: Text('Tomate'),
         actions: [
           IconButton(
             icon: Icon(getAlarmIcon()),
